@@ -1,9 +1,12 @@
+-- 99 Noites Hub completo
+-- Hub visual com botão ativar/desativar Kill Aura que ataca NPCs próximos
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 
 local toggleKillAura = false
-local range = 25
+local range = 30
 local damage = 30
 local attackDelay = 0.15
 
