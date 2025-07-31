@@ -1,0 +1,73 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+
+local toggleKillAura = false
+local range = 25
+local damage = 30
+local attackDelay = 0.15
+
+-- Criar GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "NoitesHub"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 220, 0, 140)
+frame.Position = UDim2.new(0.5, -110, 0.5, -70)
+frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+title.BorderSizePixel = 0
+title.Text = "💀 99 Noites Hub"
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 22
+
+local killAuraBtn = Instance.new("TextButton", frame)
+killAuraBtn.Size = UDim2.new(1, -20, 0, 50)
+killAuraBtn.Position = UDim2.new(0, 10, 0, 40)
+killAuraBtn.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
+killAuraBtn.TextColor3 = Color3.new(1,1,1)
+killAuraBtn.Font = Enum.Font.SourceSansBold
+killAuraBtn.TextSize = 18
+killAuraBtn.Text = "Ativar Kill Aura"
+
+killAuraBtn.MouseButton1Click:Connect(function()
+    toggleKillAura = not toggleKillAura
+    if toggleKillAura then
+        killAuraBtn.Text = "Desativar Kill Aura"
+        killAuraBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+    else
+        killAuraBtn.Text = "Ativar Kill Aura"
+        killAuraBtn.BackgroundColor3 = Color3.fromRGB(255, 85, 0)
+    end
+end)
+
+-- Função Kill Aura (loop)
+task.spawn(function()
+    while true do
+        if toggleKillAura and char and char:FindFirstChild("HumanoidRootPart") then
+            local root = char.HumanoidRootPart
+            for _, npc in pairs(workspace:GetDescendants()) do
+                if npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid")
+                    and npc ~= char and npc:FindFirstChild("HumanoidRootPart") then
+                    local dist = (npc.HumanoidRootPart.Position - root.Position).Magnitude
+                    if dist <= range then
+                        local humanoid = npc:FindFirstChildOfClass("Humanoid")
+                        if humanoid and humanoid.Health > 0 then
+                            humanoid:TakeDamage(damage)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(attackDelay)
+    end
+end)
