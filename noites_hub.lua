@@ -1,5 +1,4 @@
--- 99 Noites Hub completo
--- Hub visual com botão ativar/desativar Kill Aura que ataca NPCs próximos
+-- 99 Noites Hub completo com Kill Aura (NPCs apenas ao equipar arma)
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -9,6 +8,13 @@ local toggleKillAura = false
 local range = 30
 local damage = 30
 local attackDelay = 0.15
+
+-- Lista de itens que ativam o Kill Aura
+local ItensPermitidos = {
+    ["Espada"] = true,
+    ["Machado"] = true,
+    ["Lança"] = true,
+}
 
 -- Criar GUI
 local gui = Instance.new("ScreenGui")
@@ -53,18 +59,26 @@ killAuraBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Função Kill Aura (loop)
+-- Função que checa se a ferramenta equipada é válida
+local function itemTemDano(ferramenta)
+    return ferramenta:IsA("Tool") and ItensPermitidos[ferramenta.Name]
+end
+
+-- Ferramenta equipada que ativa o kill aura
+local ferramentaAtual = nil
+local auraAtiva = false
+
+-- Loop de ataque
 task.spawn(function()
     while true do
-        if toggleKillAura and char and char:FindFirstChild("HumanoidRootPart") then
+        if toggleKillAura and auraAtiva and char and char:FindFirstChild("HumanoidRootPart") then
             local root = char.HumanoidRootPart
             for _, npc in pairs(workspace:GetDescendants()) do
-                if npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid")
-                    and npc ~= char and npc:FindFirstChild("HumanoidRootPart") then
-                    local dist = (npc.HumanoidRootPart.Position - root.Position).Magnitude
-                    if dist <= range then
-                        local humanoid = npc:FindFirstChildOfClass("Humanoid")
-                        if humanoid and humanoid.Health > 0 then
+                if npc:IsA("Model") and npc ~= char and npc:FindFirstChild("HumanoidRootPart") and npc:FindFirstChildOfClass("Humanoid") then
+                    local humanoid = npc:FindFirstChildOfClass("Humanoid")
+                    if humanoid and humanoid.Health > 0 then
+                        local dist = (npc.HumanoidRootPart.Position - root.Position).Magnitude
+                        if dist <= range then
                             humanoid:TakeDamage(damage)
                         end
                     end
@@ -72,5 +86,23 @@ task.spawn(function()
             end
         end
         task.wait(attackDelay)
+    end
+end)
+
+-- Detectar ferramenta equipada
+player.CharacterAdded:Connect(function(c)
+    char = c
+end)
+
+char.ChildAdded:Connect(function(child)
+    if itemTemDano(child) then
+        child.Equipped:Connect(function()
+            ferramentaAtual = child
+            auraAtiva = true
+        end)
+        child.Unequipped:Connect(function()
+            ferramentaAtual = nil
+            auraAtiva = false
+        end)
     end
 end)
